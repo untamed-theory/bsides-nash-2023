@@ -1,0 +1,33 @@
+pipeline {
+    agent any
+    stages {
+        stage ('Install_Requirements') {
+            steps {
+                sh """
+                    virtualenv venv
+                    pip3 install -r requirements.txt || true
+                """
+            }
+        }
+
+        stage ('Lint') {
+            steps {
+                sh "pylint ${PROJECT} || true"
+            }
+        }
+
+        stage ('Tests') {
+            steps {
+                withAWS(credentials: 'AWS_key', region: 'us-east-1'){
+                    sh "make test"
+                }
+            }
+        }
+    }
+    post { 
+        always { 
+            cleanWs()
+        }
+    }
+}
+
